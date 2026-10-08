@@ -204,8 +204,13 @@ function submitResponse(data) {
     const breathingChoice=data.q4_score;
     if(!Number.isInteger(breathingChoice) || breathingChoice<1 || breathingChoice>5) throw new Error('請選擇呼吸頻率');
     row.push(breathingChoice,breathing.title,breathing.options[breathingChoice-1],survey.ask.title,ask);
-    // RAW 保證姓名或題目即使以 = 開頭也只當文字，不執行公式。
-    Sheets.Spreadsheets.Values.append({values:[row]},id,"'回覆'!A:T",{valueInputOption:'RAW',insertDataOption:'OVERWRITE'});
+    // 依工作表座標從 A 欄追加，不讓邏輯表格偵測改變起始欄。
+    // 明確使用 stringValue，姓名或簡答即使以 = 開頭也不執行公式。
+    Sheets.Spreadsheets.batchUpdate({requests:[{appendCells:{
+      sheetId:2,
+      rows:[{values:row.map(value=>({userEnteredValue:typeof value==='number'?{numberValue:value}:{stringValue:value}}))}],
+      fields:'userEnteredValue'
+    }}]},id);
     return {ok:true};
   } catch(e) {console.error(e);return {ok:false,error:e.message || '儲存失敗，請稍後重試。'};}
   finally {if(locked) lock.releaseLock();}

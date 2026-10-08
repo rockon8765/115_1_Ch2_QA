@@ -30,12 +30,13 @@ Apps Script `/exec` 網址已填入靜態前端的 `SCRIPT_URL`。Git 推送只�
 | `index.html`、`assets/background-music.mp3` | GitHub Pages 根目錄版本 |
 | `dist/index.html`、`dist/assets/background-music.mp3` | 已發佈 Sites 的靜態版本，與根目錄前端內容相同 |
 | `.openai/hosting.json` | 既有 Sites 專案設定，靜態輸出目錄為 `dist` |
-| `apps-script/Code.gs` | 已部署第 4 版的收件、題目讀取、資料遷移與表頭相容程式 |
+| `apps-script/Code.gs` | 已部署第 5 版的收件、固定 A:T 欄位寫入、資料遷移與表頭相容程式 |
 | `apps-script/appsscript.json` | Apps Script V8、台北時區、Advanced Sheets Service 與授權範圍 |
 | `apps-script/index.html` | Google HtmlService 既有備援前端，支援四道單選題與簡答；未加入 Sites 的開始入口與背景音樂 |
 | `verify-backend.cjs` | 收件與驗證邏輯測試 |
 | `verify-migration.cjs` | 舊 15 欄遷移至 20 欄、保留資料與重複執行測試 |
 | `verify-header-compat.cjs` | 原表頭、換行題文表頭與錯誤欄位檢查 |
+| `verify-column-placement.cjs` | 隱藏 A 欄時的 A:T 寫入、歷史列與文字型別檢查 |
 
 日後調整靜態前端時，請同步 `index.html` 與 `dist/index.html`；音樂檔的相對路徑可用於 GitHub Pages 的專案子目錄。HtmlService 不會供應這些相對靜態資產，因此備援前端獨立保存。
 
@@ -53,7 +54,9 @@ Apps Script `/exec` 網址已填入靜態前端的 `SCRIPT_URL`。Git 推送只�
 
 第一行的 `Q1 題目`、`Q2 題目`、`Q3 題目`、`Q6 題目`、`Q7 題目` 及其他欄名仍須保留。題目文字若有修改，可同步更新這五格第二行以後的顯示文字；不要搬移或插入回覆欄位。
 
-完整題文是既有試算表的顯示設定；新建後台不會自動加入這些表頭題文。Apps Script 部署第 4 版與程式內的 `QUESTIONNAIRE_SCHEMA_VERSION = '2'` 是不同的版本計數。
+完整題文是既有試算表的顯示設定；新建後台不會自動加入這些表頭題文。Apps Script 部署第 5 版與程式內的 `QUESTIONNAIRE_SCHEMA_VERSION = '2'` 是不同的版本計數。
+
+可隱藏 A 欄時間戳。收件使用 `appendCells` 依 A:T 的固定欄位順序追加到工作表最後有資料的列之後，避免 `values.append` 的邏輯表格偵測改變起始欄。字串以 `stringValue` 寫入，公式樣式的姓名或簡答仍保留為文字。
 
 ## 重新建立獨立後台
 
@@ -80,9 +83,10 @@ GitHub Pages 可使用 `main` 分支、`/ (root)`，由根目錄 `index.html` �
 node verify-backend.cjs
 node verify-migration.cjs
 node verify-header-compat.cjs
+node verify-column-placement.cjs
 ```
 
-測試使用本機假資料與 mock Google Sheets，不會向正式後台新增回覆。涵蓋必填、整數範圍、社團白名單、Q6 不計入總分、Q7 選填與字數限制、去重、問卷版本、RAW 文字寫入、歷史快照、遷移保留資料、收件開關及表頭相容性。
+測試使用本機假資料與 mock Google Sheets，不會向正式後台新增回覆。涵蓋必填、整數範圍、社團白名單、Q6 不計入總分、Q7 選填與字數限制、去重、問卷版本、純文字寫入、歷史快照、遷移保留資料、收件開關及表頭相容性。
 
 本儲存庫僅保存程式、音樂資產與使用說明，不包含學員回覆、試算表匯出或登入憑證。
 

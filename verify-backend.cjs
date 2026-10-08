@@ -19,7 +19,11 @@ const Sheets = {Spreadsheets:{Values:{
     if(range.includes('O2:O')) return {values:sheets['回覆'].data.slice(1).map(row=>[row[14]])};
     throw new Error('Unexpected range '+range);
   })}; },
-  append(body,id,range,options) {assert.equal(options.valueInputOption,'RAW'); sheets['回覆'].appendRow(body.values[0]);}
+  append() {throw new Error('不得使用會自動判定起始欄的 Values.append');}
+},batchUpdate(body){
+  const req=body.requests[0].appendCells;
+  assert.equal(req.sheetId,2); assert.equal(req.fields,'userEnteredValue');
+  sheets['回覆'].appendRow(req.rows[0].values.map(c=>c.userEnteredValue.numberValue ?? c.userEnteredValue.stringValue));
 }}};
 const ctx = vm.createContext({console: {log(){},error(){}}, Session: { getActiveUser: () => ({getEmail:()=>'someone-else@example.com'}) }, PropertiesService: {getScriptProperties: () => ({getProperty:()=> 'test-sheet'})}, Sheets, LockService: {getScriptLock:()=>({tryLock:()=>{locked=true;return true;},releaseLock:()=>{locked=false;}})}, Utilities:{DigestAlgorithm:{SHA_256:'sha256'},Charset:{UTF_8:'utf8'},computeDigest:(_,v)=>crypto.createHash('sha256').update(v).digest(),base64EncodeWebSafe:v=>Buffer.from(v).toString('base64url')}});
 vm.runInContext(code, ctx);
