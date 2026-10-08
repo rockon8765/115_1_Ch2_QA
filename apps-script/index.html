@@ -41,7 +41,6 @@
   }
 
   * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
@@ -50,7 +49,7 @@
     font-family: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
     line-height: 1.7;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 76px 16px 64px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 16px 64px; }
 
   header { text-align: center; margin-bottom: 28px; }
   .enso {
@@ -62,7 +61,6 @@
     font-size: clamp(1.5rem, 5vw, 2rem); margin: 4px 0 8px; letter-spacing: .05em;
   }
   .intro { color: var(--muted); margin: 0 auto; max-width: 30em; font-size: 1rem; }
-  header .intro { white-space: pre-line; }
 
   form { display: grid; gap: 18px; }
   form[hidden] { display: none; }
@@ -92,11 +90,9 @@
     background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
     background-size: 6px 6px; background-repeat: no-repeat; padding-right: 40px;
   }
+  textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+  .optional { color: var(--muted); font-size: .85rem; font-weight: 400; margin-left: 4px; }
   input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-
-  textarea { resize: vertical; min-height: 112px; line-height: 1.7; }
-  .optional { color: var(--muted); font-size: .875rem; font-weight: 400; }
-  .ask-summary { white-space: pre-wrap; overflow-wrap: anywhere; }
 
   .options { display: grid; gap: 8px; }
   .opt { position: relative; }
@@ -124,22 +120,8 @@
     border-radius: 99px; padding: 14px 20px; width: 100%;
   }
   button:disabled { opacity: .6; cursor: wait; }
-  .music-toggle {
-    position: fixed; top: max(12px, env(safe-area-inset-top));
-    right: max(12px, env(safe-area-inset-right)); z-index: 10;
-    width: auto; min-height: 44px; padding: 8px 14px;
-    display: inline-flex; align-items: center; gap: 7px;
-    font-size: .9rem; font-weight: 500; letter-spacing: normal;
-    color: var(--ink); background: var(--paper); border: 1px solid var(--line);
-    box-shadow: 0 2px 8px #0002;
-  }
-  .music-toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
-  .music-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .survey-start { text-align: center; }
   .status { text-align: center; font-size: .9rem; min-height: 1.5em; margin: 0; }
   .status.error { color: var(--warn); }
-  .survey-start .status { min-height: 0; }
-  .survey-start .status:not(:empty) { margin-top: 12px; }
 
   .done { display: none; text-align: center; }
   .done.show { display: block; }
@@ -147,13 +129,11 @@
   .summary { text-align: left; margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
   .summary li { border-top: 1px solid var(--line); padding-top: 10px; font-size: .92rem; }
   .summary b { color: var(--accent); font-weight: 500; }
+  .summary .ask-summary { white-space: pre-wrap; overflow-wrap: anywhere; }
   footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 32px; }
 </style>
 </head>
 <body>
-<button type="button" id="musicToggle" class="music-toggle" aria-label="播放音樂" aria-pressed="false" aria-controls="backgroundMusic" hidden>
-  <span aria-hidden="true">♪</span><span id="musicToggleText">播放音樂</span>
-</button>
 <div class="wrap">
   <header>
     <svg class="enso" viewBox="0 0 64 64" aria-hidden="true">
@@ -161,20 +141,10 @@
     </svg>
     <p class="kicker">台大領袖社 × 台科領袖社</p>
     <h1>課前 QA：專注力自我覺察</h1>
-    <p class="intro">花一分鐘，誠實觀察自己平常的專注狀態。
-沒有標準答案，選最接近你「最近一週」實際情況的選項就好。</p>
+    <p class="intro">花一分鐘，誠實觀察自己平常的專注狀態。沒有標準答案，選最接近你「最近一週」實際情況的選項就好。</p>
   </header>
 
-  <audio id="backgroundMusic" loop preload="metadata" hidden aria-hidden="true">
-    <source src="./assets/background-music.mp3" type="audio/mpeg">
-  </audio>
-
-  <section class="card survey-start" id="surveyStart">
-    <button type="button" id="startSurveyBtn" aria-controls="qa" disabled>載入問卷中…</button>
-    <p class="status" id="startStatus" role="status" aria-live="polite"></p>
-  </section>
-
-  <form id="qa" novalidate hidden>
+  <form id="qa" novalidate>
     <div class="card" data-field="name">
       <div class="q-head"><span class="q-no">一</span><label class="q-title" for="name">你的姓名<span class="req">*</span></label></div>
       <input type="text" id="name" name="name" autocomplete="name" maxlength="30" placeholder="請輸入姓名">
@@ -193,8 +163,9 @@
     <div id="questions"></div>
 
     <div class="card" data-field="ask">
-      <div class="q-head"><span class="q-no">七</span><label class="q-title" for="ask">有沒有想問講師的問題呢~ <span class="optional" id="ask-optional">（選填）</span></label></div>
-      <textarea id="ask" name="ask" rows="4" maxlength="500" placeholder="寫下你的問題"></textarea>
+      <span class="q-tag">想問講師</span>
+      <div class="q-head"><span class="q-no">七</span><label class="q-title" for="ask"><span id="ask-title">有沒有特別想要問講師的，也歡迎提出~</span><span class="optional" id="ask-optional">（選填）</span></label></div>
+      <textarea id="ask" name="ask" maxlength="500" placeholder="寫下你的問題"></textarea>
       <p class="err" id="ask-error">最多可填寫 500 字</p>
     </div>
 
@@ -215,61 +186,10 @@
 </div>
 
 <script>
-const backgroundMusic = document.getElementById("backgroundMusic");
-const musicToggle = document.getElementById("musicToggle");
-const musicToggleText = document.getElementById("musicToggleText");
-let musicEnabled = true;
-let surveyStarted = false;
-let surveyOpen = false;
-backgroundMusic.volume = 0.4;
-function renderMusicState() {
-  const playing = musicEnabled && !backgroundMusic.paused;
-  musicToggle.setAttribute("aria-pressed", String(playing));
-  musicToggleText.textContent = playing ? "音樂：開" : musicEnabled ? "播放音樂" : "音樂：關";
-  musicToggle.setAttribute("aria-label", playing ? "關閉音樂" : "播放音樂");
-}
-function startBackgroundMusic() {
-  if (!musicEnabled || !backgroundMusic.paused) return;
-  // 在使用者手勢內直接呼叫 play，讓瀏覽器允許有聲播放。
-  try {
-    Promise.resolve(backgroundMusic.play()).then(() => {
-      if (!musicEnabled) backgroundMusic.pause();
-      renderMusicState();
-    }).catch(renderMusicState);
-  } catch {
-    renderMusicState();
-  }
-}
-musicToggle.addEventListener("click", () => {
-  if (musicEnabled && !backgroundMusic.paused) {
-    musicEnabled = false;
-    backgroundMusic.autoplay = false;
-    backgroundMusic.pause();
-    renderMusicState();
-  } else {
-    musicEnabled = true;
-    startBackgroundMusic();
-  }
-});
-backgroundMusic.addEventListener("playing", () => {
-  if (!musicEnabled) backgroundMusic.pause();
-  renderMusicState();
-});
-backgroundMusic.addEventListener("pause", renderMusicState);
-backgroundMusic.addEventListener("error", renderMusicState);
-for (const event of ["click", "touchend", "keydown"]) {
-  document.addEventListener(event, e => {
-    // 開關本身由 click 處理，避免同一次操作先播放、又立刻關閉。
-    if (!surveyStarted || (e.target.closest && e.target.closest("#musicToggle"))) return;
-    startBackgroundMusic();
-  }, { capture: true, passive: true });
-}
-renderMusicState();
-
 /* ============================================================
  * 1) 部署好 Google Apps Script 之後，把「網頁應用程式網址」貼在這裡
  * ============================================================ */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4z-XJpzCk1FCge3gdB-0yjNW_ApeHy2Mu3_XK4xug4YMzYLpZNTxJYqE-gGLgQ9LV/exec";
+const SCRIPT_URL = ""; // 若用 GitHub Pages 或 Sites，貼上自己的 Apps Script /exec 網址。
 
 const isAppsScript = typeof google !== "undefined" && google.script && google.script.run;
 let surveyVersion = "initial";
@@ -277,7 +197,7 @@ function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({ "&
 
 
 /* ============================================================
- * 2) 三題自我覺察題目（score 1 → 5 由低到高）
+ * 2) 三題專注量尺與呼吸頻率題（呼吸頻率不顯示分數）
  * ============================================================ */
 let QUESTIONS = [
   {
@@ -312,20 +232,30 @@ let QUESTIONS = [
       "幾乎總是，身心合一、內在平靜"
     ],
     low: "心亂不同調", high: "身心合一"
+  },
+  {
+    id: "q4",
+    tag: "呼吸頻率",
+    title: "禪定時，我的呼吸每分鐘大約可以幾下？（一吸一吐算一下）",
+    options: ["20 下以上", "15 到 20 下", "10 到 15 下", "5 到 10 下", "5 下以內"],
+    low: "呼吸較快", high: "呼吸深長",
+    showScore: false
   }
 ];
 
-let ASK = { title: "有沒有想問講師的問題呢~", placeholder: "寫下你的問題", maxLength: 500, required: false };
+let ASK = { title: "有沒有特別想要問講師的，也歡迎提出~", placeholder: "寫下你的問題", maxLength: 500, required: false };
 function renderAsk() {
   const input = document.getElementById("ask");
+  document.getElementById("ask-title").textContent = ASK.title;
   input.placeholder = ASK.placeholder;
   input.maxLength = ASK.maxLength;
   input.required = ASK.required;
   const hint = document.getElementById("ask-optional");
   hint.textContent = ASK.required ? "*" : "（選填）";
   hint.className = ASK.required ? "req" : "optional";
-  document.getElementById("ask-error").textContent = ASK.required ? "請填寫問題，最多 " + ASK.maxLength + " 字" : "最多可填寫 " + ASK.maxLength + " 字";
+  document.getElementById("ask-error").textContent = ASK.required ? `請填寫問題（最多 ${ASK.maxLength} 字）` : `最多可填寫 ${ASK.maxLength} 字`;
 }
+renderAsk();
 
 const CN_NO = ["三", "四", "五", "六"];
 const box = document.getElementById("questions");
@@ -362,20 +292,6 @@ renderQuestions();
 const form = document.getElementById("qa");
 const statusEl = document.getElementById("status");
 const btn = document.getElementById("submitBtn");
-const surveyStart = document.getElementById("surveyStart");
-const startSurveyBtn = document.getElementById("startSurveyBtn");
-const startStatus = document.getElementById("startStatus");
-
-startSurveyBtn.addEventListener("click", () => {
-  if (!surveyOpen || surveyStarted) return;
-  surveyStarted = true;
-  // 直接在點擊事件內播放；音樂失敗也讓學員繼續填答。
-  startBackgroundMusic();
-  form.hidden = false;
-  musicToggle.hidden = false;
-  document.getElementById("name").focus({ preventScroll: true });
-  surveyStart.hidden = true;
-});
 
 form.addEventListener("input", e => {
   const card = e.target.closest(".card");
@@ -467,7 +383,9 @@ function showDone(data) {
   form.style.display = "none";
   const ul = document.getElementById("summary");
   ul.innerHTML = QUESTIONS.map(q =>
-    `<li>${escapeHtml(q.tag)}：<b>${data[q.id + "_score"]} / 5</b>　${escapeHtml(data[q.id + "_answer"])}</li>`
+    q.showScore === false
+      ? `<li>${escapeHtml(q.tag)}：<b>${escapeHtml(data[q.id + "_answer"])}</b></li>`
+      : `<li>${escapeHtml(q.tag)}：<b>${data[q.id + "_score"]} / 5</b>　${escapeHtml(data[q.id + "_answer"])}</li>`
   ).join("") + (data.ask ? `<li class="ask-summary">想問講師：${escapeHtml(data.ask)}</li>` : "");
   document.getElementById("done").classList.add("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -476,8 +394,6 @@ function showDone(data) {
 async function loadSurvey() {
   if (!isAppsScript && !SCRIPT_URL) {
     statusEl.textContent = "預覽模式：尚未連接 Google 試算表，暫時無法送出。";
-    startStatus.textContent = "尚未連接問卷後台，暫時無法開始。";
-    startSurveyBtn.textContent = "暫時無法開始";
     return;
   }
   btn.disabled = true; btn.textContent = "載入問卷中…";
@@ -489,13 +405,12 @@ async function loadSurvey() {
     const cfg = result.survey;
     surveyVersion = cfg.version;
     QUESTIONS = cfg.questions;
-    if (!cfg.ask) throw new Error("問卷尚未開放簡答題，請聯絡主辦夥伴。");
-    ASK = { ...cfg.ask, title: "有沒有想問講師的問題呢~" };
+    ASK = cfg.ask;
     renderAsk();
     document.title = cfg.title;
     document.querySelector("header h1").textContent = cfg.title;
     document.querySelector(".kicker").textContent = cfg.subtitle;
-    document.querySelector("header .intro").textContent = cfg.intro.replace(/\s*沒有標準答案/, "\n沒有標準答案");
+    document.querySelector("header .intro").textContent = cfg.intro;
     document.querySelector("#done .intro").textContent = cfg.thanks;
     document.querySelector("footer").textContent = cfg.subtitle + " · 聯合社課";
     const select = document.getElementById("club");
@@ -503,28 +418,12 @@ async function loadSurvey() {
     const placeholder = new Option("請選擇社團", ""); placeholder.disabled = true; placeholder.selected = true; select.add(placeholder);
     cfg.clubs.forEach(club => select.add(new Option(club, club)));
     renderQuestions();
-    surveyOpen = cfg.open === true;
-    if (!surveyOpen) {
-      form.hidden = true;
-      surveyStart.hidden = true;
-      startSurveyBtn.textContent = "問卷暫停收件";
-      document.getElementById("done").classList.add("show");
-      document.querySelector("#done h2").textContent = "問卷暫停收件";
-      document.querySelector("#done .intro").textContent = "請留意聯合社課通知，開放後再回來填寫。";
-      return;
-    }
+    if (!cfg.open) { form.hidden = true; document.getElementById("done").classList.add("show"); document.querySelector("#done h2").textContent = "問卷暫停收件"; document.querySelector("#done .intro").textContent = "請留意聯合社課通知，開放後再回來填寫。"; return; }
     btn.disabled = false; btn.textContent = "送出";
-    startSurveyBtn.disabled = false;
-    startSurveyBtn.textContent = "開始填寫";
   } catch (error) {
     statusEl.textContent = "無法載入問卷，請重新整理或聯絡主辦夥伴。";
     statusEl.className = "status error";
     btn.textContent = "暫時無法送出";
-    surveyOpen = false;
-    startSurveyBtn.disabled = true;
-    startSurveyBtn.textContent = "暫時無法開始";
-    startStatus.textContent = "無法載入問卷，請重新整理或聯絡主辦夥伴。";
-    startStatus.className = "status error";
   }
 }
 const modelContext = document.modelContext;

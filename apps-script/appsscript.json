@@ -1,0 +1,7 @@
+{
+  "timeZone": "Asia/Taipei",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "dependencies": { "enabledAdvancedServices": [{ "userSymbol": "Sheets", "version": "v4", "serviceId": "sheets" }] },
+  "oauthScopes": ["https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/userinfo.email"]
+}
